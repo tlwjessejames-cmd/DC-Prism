@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="robots" content="noindex">
+<title>PRISM Issue 1: The Night the Lights Went Wrong</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: #05070f; color: #e8f4ff;
+         font-family: Georgia, 'Times New Roman', serif;
+         display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 1rem; padding: .6rem 1rem;
+           background: #0a0f22; border-bottom: 1px solid #1d3a52; }
+  header a { color: #6ef0ff; text-decoration: none; font-size: 1.4rem; line-height: 1; }
+  header .t { font-size: 1rem; }
+  header .dl { margin-left: auto; color: #9fc6de; font-size: .85rem; }
+  #stage { flex: 1; display: flex; align-items: center; justify-content: center;
+           overflow: hidden; position: relative; touch-action: pan-y; }
+  #page { max-height: 100%; max-width: 100%; object-fit: contain; cursor: zoom-in;
+          transition: transform .25s ease; user-select: none; -webkit-user-drag: none; }
+  #page.zoom { cursor: zoom-out; }
+  nav { display: flex; align-items: center; justify-content: space-between;
+        padding: .6rem 1rem; background: #0a0f22; border-top: 1px solid #1d3a52; }
+  nav button { background: #12233c; color: #e8f4ff; border: 1px solid #2b5878;
+               border-radius: 10px; padding: .55rem 1.4rem; font-size: 1rem; cursor: pointer; }
+  nav button:disabled { opacity: .35; cursor: default; }
+  #count { color: #9fc6de; font-size: .95rem; }
+  .zone { position: absolute; top: 0; bottom: 0; width: 22%; z-index: 2; }
+  #zprev { left: 0; } #znext { right: 0; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../../" title="All issues">&#8592;</a>
+  <span class="t">Issue 1: The Night the Lights Went Wrong</span>
+  <a class="dl" href="prism-issue-01.pdf">Print PDF</a>
+</header>
+<div id="stage">
+  <div class="zone" id="zprev"></div>
+  <img id="page" alt="Comic page">
+  <div class="zone" id="znext"></div>
+</div>
+<nav>
+  <button id="prev">&#8592; Prev</button>
+  <span id="count"></span>
+  <button id="next">Next &#8594;</button>
+</nav>
+<script>
+  var pages = ["page-00.png","page-01.png","page-02.png","page-03.png",
+               "page-04.png","page-05.png","page-06.png","page-07.png"];
+  var i = 0, zoomed = false;
+  var img = document.getElementById('page');
+  var count = document.getElementById('count');
+  var prev = document.getElementById('prev'), next = document.getElementById('next');
+  pages.forEach(function (p) { var im = new Image(); im.src = p; });
+  function show(n) {
+    i = Math.max(0, Math.min(pages.length - 1, n));
+    unzoom();
+    img.src = pages[i];
+    count.textContent = 'Page ' + (i + 1) + ' of ' + pages.length;
+    prev.disabled = i === 0;
+    next.disabled = i === pages.length - 1;
+  }
+  function unzoom() { zoomed = false; img.style.transform = ''; img.classList.remove('zoom'); }
+  prev.addEventListener('click', function () { show(i - 1); });
+  next.addEventListener('click', function () { show(i + 1); });
+  document.getElementById('zprev').addEventListener('click', function () { if (!zoomed) show(i - 1); });
+  document.getElementById('znext').addEventListener('click', function () { if (!zoomed) show(i + 1); });
+  img.addEventListener('click', function (e) {
+    if (zoomed) { unzoom(); return; }
+    var r = img.getBoundingClientRect();
+    var ox = ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%';
+    var oy = ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%';
+    img.style.transformOrigin = ox + ' ' + oy;
+    img.style.transform = 'scale(1.9)';
+    img.classList.add('zoom');
+    zoomed = true;
+  });
+  var sx = null;
+  var stage = document.getElementById('stage');
+  stage.addEventListener('touchstart', function (e) { sx = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (e) {
+    if (sx === null || zoomed) { sx = null; return; }
+    var dx = e.changedTouches[0].clientX - sx;
+    if (dx < -48) show(i + 1);
+    else if (dx > 48) show(i - 1);
+    sx = null;
+  }, { passive: true });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight') show(i + 1);
+    if (e.key === 'ArrowLeft') show(i - 1);
+  });
+  show(0);
+</script>
+</body>
+</html>
